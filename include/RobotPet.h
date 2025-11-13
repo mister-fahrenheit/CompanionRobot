@@ -9,9 +9,6 @@ class RobotPet {
 public:
     RobotPet();
 
-    // Initializes the robot.
-    void initialize();
-
     // Updates the robot's state.
     void update();
 
@@ -21,13 +18,9 @@ public:
     // Gets the menu.
     Menu& getMenu();
 
-    // Returns true if the SD card is initialized.
-    bool isSdCardInitialized() const;
-
 private:
     StateManager stateManager;
     Menu menu;
-    bool sdCardInitialized;
 };
 
 #endif // ROBOT_PET_H

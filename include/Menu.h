@@ -4,18 +4,17 @@
 #include "vex.h"
 #include "RobotState.h"
 #include "StateManager.h"
+#include "Animation.h"
 #include <vector>
 #include <string>
 
 class RobotPet; // Forward declaration
 
-// A pair of a state name and a function to create the state.
 struct MenuItem {
     std::string name;
     RobotState* (*createState)(RobotPet&);
 };
 
-// Manages the on-screen menu.
 class Menu {
 public:
     Menu(RobotPet& robot);
@@ -36,14 +35,12 @@ public:
     bool isVisible() const;
 
 private:
-    // Draws the menu on the screen.
     void draw();
 
     RobotPet& robot;
     bool visible;
     int selectedIndex;
     std::vector<MenuItem> menuItems;
-    float slidePosition; // 0.0 = hidden, 1.0 = shown
 }; 
 
 #endif // MENU_H

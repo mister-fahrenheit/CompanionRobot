@@ -9,15 +9,17 @@
 class DefaultState : public RobotState {
 public:
     DefaultState(RobotPet& robot);
-    ~DefaultState();
 
     void enter() override;
     void update() override;
     void exit() override;
 
+    void selectAnimation();
+    void changeAnimationTo(Animation* newAnimation);
+
 private:
     RobotPet& robot;
-    Animation* happyAnimation;
+    Animation* currentAnimation;
 };
 
 #endif // DEFAULT_STATE_H

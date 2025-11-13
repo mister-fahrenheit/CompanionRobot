@@ -60,13 +60,18 @@ bool Menu::isVisible() const {
 }
 
 void Menu::draw() {
-    Brain.Screen.setFillColor(vex::color(0x333333));
+    Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
-
-    if (selectedIndex >= 0 && selectedIndex < menuItems.size()) {
-        Brain.Screen.setFillColor(vex::color(0x555555));
-        Brain.Screen.drawRectangle(40, 30, 80, 48);
-    }
-    Brain.Screen.setPenColor(vex::color(0xFFFFFF));
-    Brain.Screen.printAt(45, 55, menuItems[selectedIndex].name.c_str());
+    Brain.Screen.setPenColor(black);
+    Brain.Screen.drawImageFromFile((std::to_string(selectedIndex) + "_1.bmp").c_str(), 39, 13);
+    Brain.Screen.drawImageFromFile((std::to_string(selectedIndex) + "_2.bmp").c_str(), 79, 13);
+    Brain.Screen.drawImageFromFile((std::to_string(selectedIndex) + "_3.bmp").c_str(), 39, 53);
+    Brain.Screen.drawImageFromFile((std::to_string(selectedIndex) + "_4.bmp").c_str(), 79, 53);
+    Brain.Screen.drawImageFromFile("LEFTARROW_1", 4, 23);
+    Brain.Screen.drawImageFromFile("LEFTARROW_2", 4, 53);
+    Brain.Screen.drawImageFromFile("RIGHTARROW_1", 134, 23);
+    Brain.Screen.drawImageFromFile("RIGHTARROW_2", 134, 53);
+    Brain.Screen.setFont(mono15);
+    Brain.Screen.printAt((160-Brain.Screen.getStringWidth(menuItems[selectedIndex].name.c_str()))/2, 95, menuItems[selectedIndex].name.c_str());
+    Brain.Screen.render();
 }
