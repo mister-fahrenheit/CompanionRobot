@@ -1,0 +1,37 @@
+Installation & Compression:
+    1. Install ImageMagick (https://imagemagick.org/script/download.php)
+    2. cd into .data_card
+1.bmp BMP3 25x25 25x25+0+0 8-bit sRGB 1954B 0.001u 0:00.000
+
+    3. for %f in (Uncompressed\*.bmp) do magick "Uncompressed\%~nxf" -colors 256 -compress RLE "Compressed\%~nxf"
+magick 1.bmp -colors 256 -compress RLE 2.bmp
+2.bmp BMP 25x25 25x25+0+0 8-bit sRGB 256c 1472B 0.001u 0:00.000 
+
+    3. for %f in (Uncompressed\*.bmp) do magick "Uncompressed\%~nxf" -colors 256 -compress RLE BMP3:"Compressed\%~nxf"
+magick 1.bmp  -colors 256 -compress RLE BMP3:3.bmp
+3.bmp BMP3 25x25 25x25+0+0 8-bit sRGB 256c 1404B 0.000u 0:00.000
+
+    3. for %f in (Uncompressed\*.bmp) do magick "Uncompressed\%~nxf" -colors 256 -compress None BMP3:"Compressed\%~nxf"
+magick 1.bmp  -colors 256 -compress None BMP3:4.bmp
+4.bmp BMP3 25x25 25x25+0+0 8-bit sRGB 256c 1778B 0.001u 0:00.000
+
+    3. for %f in (Uncompressed\*.bmp) do magick "Uncompressed\%~nxf" -depth 8 -type palette -compress None BMP3:"Compressed\%~nxf"
+magick 1.bmp  -depth 8 -type palette -compress None BMP3:5.bmp
+5.bmp BMP3 25x25 25x25+0+0 8-bit sRGB 256c 1778B 0.001u 0:00.000
+
+This will convert the .bmp files from 24bit encoding to 8bit encoding which will lower image sizes by at least 66.66%
+This will also decrease the number of possible colors for images, but images should still be about the same.
+
+1.bmp BMP3 100x50 100x50+0+0 8-bit sRGB 15054B 0.000u 0:00.000		Uncompressed							No Output
+2.bmp BMP 100x50 100x50+0+0 8-bit sRGB 256c 1754B 0.001u 0:00.000	-colors 256 -compress RLE 2.bmp					No Output
+3.bmp BMP3 100x50 100x50+0+0 8-bit sRGB 256c 1686B 0.001u 0:00.000	-colors 256 -compress RLE BMP3:3.bmp					No Output
+4.bmp BMP3 100x50 100x50+0+0 8-bit sRGB 256c 6078B 0.001u 0:00.000	-colors 256 -compress None BMP3:4.bmp				No Output
+5.bmp BMP3 100x50 100x50+0+0 8-bit sRGB 256c 6078B 0.000u 0:00.000	-depth 8 -type palette -compress None BMP3:5.bmp			No Output
+6.bmp BMP3 100x50 100x50+0+0 4-bit sRGB 16c 2718B 0.001u 0:00.000 	-depth 4 -type palette -compress None BMP3:6.bmp			No Output
+7.bmp BMP3 100x50 100x50+0+0 4-bit sRGB 16c 2718B 0.001u 0:00.000	-depth 4 -type palette BMP3:7.bmp					No Output
+8.bmp BMP3 100x50 100x50+0+0 8-bit sRGB 256c 1686B 0.001u 0:00.000 	-type palette -colors 32 BMP3:8.bmp 					No Output
+9.bmp BMP2 100x50 100x50+0+0 8-bit sRGB 256c 5794B 0.001u 0:00.000	-define bmp:format=bmp2 -depth 8 -type palette -compress None 9.bmp	No Output
+10.bmp BMP2 100x50 100x50+0+0 4-bit sRGB 16c 2674B 0.001u 0:00.000	-define bmp:format=bmp2 -depth 4 -type palette -compress None 10.bmp	No Output
+11.bmp BMP3 100x50 100x50+0+0 8-bit sRGB 256c 6078B 0.001u 0:00.000	PNG:- | magick - -type palette -depth 8 -compress None BMP3:11.bmp		No Output
+
+for %f in (Uncompressed\*.bmp) do magick  "Uncompressed\%~nxf" -type palette -depth 8 -colors 256 -compress None BMP3:"Compressed\%~nxf"

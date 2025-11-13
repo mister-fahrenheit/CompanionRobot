@@ -3,10 +3,13 @@
 		"${config:vexrobotics.vexcode.Cpp.Sdk.Home}\\IQ2\\IQ2_20250520_15_00_00\\vexiq2\\gcc\\include\\sys"
 	],
 	"cSpell.words": [
+		"CYEL",
 		"mkrules",
-		"PROJECTLIB"
+		"PROJECTLIB",
+		"Yaseman"
 	],
 	"files.associations": {
-		"chrono": "cpp"
+		"chrono": "cpp",
+		"new": "cpp"
 	}
 }

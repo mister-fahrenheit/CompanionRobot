@@ -4,7 +4,7 @@
 
 DefaultState::DefaultState(RobotPet& robot) : robot(robot), happyAnimation(NULL) {
     // The constructor initializes the reference to the robot.
-    // happyAnimation = new Animation("HAPPY", 12);
+    happyAnimation = new Animation("numbers", 8);
 }
 
 DefaultState::~DefaultState() {
@@ -15,6 +15,7 @@ void DefaultState::enter() {
     printf("Entered Default State\n");
     Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
+    happyAnimation->draw();
 }
 
 void DefaultState::update() {
@@ -24,9 +25,8 @@ void DefaultState::update() {
         robot.getMenu().show();
     }
 
-    // Update and draw the animation.
-    // happyAnimation->update();
-    // happyAnimation->draw();
+    // Update the animation.
+    happyAnimation->update();
 }
 
 void DefaultState::exit() {
