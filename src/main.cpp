@@ -13,57 +13,61 @@
 #include "ManualState.h"
 #include "PlayMusicState.h"
 #include "FollowState.h"
+#include "ListenMusicState.h"
 #include "RetrieveState.h"
 #include "ShutdownState.h"
 
 // Factory functions for creating states.
-RobotState* createDefaultState(RobotPet& robot) { return new DefaultState(robot); }
-RobotState* createFollowState(RobotPet& robot) { return new FollowState(robot); }
-RobotState* createRetrieveState(RobotPet& robot) { return new RetrieveState(robot); }
-RobotState* createPlayMusicState(RobotPet& robot) { return new PlayMusicState(robot); }
-RobotState* createManualState(RobotPet& robot) { return new ManualState(robot); }
+RobotState *createDefaultState(RobotPet &robot) { return new DefaultState(robot); }
+RobotState *createFollowState(RobotPet &robot) { return new FollowState(robot); }
+RobotState *createRetrieveState(RobotPet &robot) { return new RetrieveState(robot); }
+RobotState *createPlayMusicState(RobotPet &robot) { return new PlayMusicState(robot); }
+RobotState *createListenMusicState(RobotPet &robot) { return new ListenMusicState(robot); }
+RobotState *createManualState(RobotPet &robot) { return new ManualState(robot); }
 
+int main()
+{
+        // Toggle for Testing Mode
+        const bool TESTING = false;
+        if (TESTING)
+        {
+                // Area for testing code without dealing with menus
+        }
+        else
+        {
+                // Create the robot pet.
+                RobotPet robot;
 
-int main() {
-    // Toggle for Testing Mode
-    const bool TESTING = false;
-    if (TESTING)
-    {
-        // Area for testing code without dealing with menus
-    }
-    else
-    {
-        // Create the robot pet.
-        RobotPet robot;
+                // Add menu items.
+                robot.getMenu().addMenuItem("Default State", &createDefaultState);
+                robot.getMenu().addMenuItem("Follow State", &createFollowState);
+                robot.getMenu().addMenuItem("Retrieve State", &createRetrieveState);
+                robot.getMenu().addMenuItem("Play Music State", &createPlayMusicState);
+                robot.getMenu().addMenuItem("Listen Music State", &createListenMusicState);
+                robot.getMenu().addMenuItem("Manual State", &createManualState);
 
-        // Add menu items.
-        robot.getMenu().addMenuItem("Default State", &createDefaultState);
-        robot.getMenu().addMenuItem("Follow State", &createFollowState);
-        robot.getMenu().addMenuItem("Retrieve State", &createRetrieveState);
-        robot.getMenu().addMenuItem("Play Music State", &createPlayMusicState);
-        robot.getMenu().addMenuItem("Manual State", &createManualState);
+                // Create the startup state.
+                StartupState *startupState = new StartupState(robot);
 
-        // Create the startup state.
-        StartupState* startupState = new StartupState(robot);
+                // Transition to the startup state.
+                robot.getStateManager().transitionTo(startupState);
 
-        // Transition to the startup state.
-        robot.getStateManager().transitionTo(startupState);
+                // Main loop.
+                int ExitCounter = 0;
+                while (ExitCounter < 200)
+                {
+                        robot.update();
+                        wait(20, msec);
 
-        // Main loop.
-        int ExitCounter = 0;
-        while (ExitCounter < 200) {
-            robot.update();
-            wait(20, msec);
+                        if (TouchLED.pressing())
+                                ExitCounter++;
+                        else
+                                ExitCounter = 0;
+                }
 
-            if (TouchLED.pressing( ))
-                ExitCounter++;
-            else
-                ExitCounter = 0;
+                ShutdownState *shutdownState = new ShutdownState(robot);
+                robot.getStateManager().transitionTo(shutdownState);
         }
 
-        ShutdownState* shutdownState = new ShutdownState(robot);
-        robot.getStateManager().transitionTo(shutdownState);
-    }
-
-    Brain.programStop();
+        Brain.programStop();
 }
