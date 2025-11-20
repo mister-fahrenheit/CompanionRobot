@@ -23,7 +23,7 @@ void StartupState::update() {
         startupAnimation->update();
     } else {
         robot.getStateManager().transitionTo(new DefaultState(robot));
-    }
+    //}
 }
 
 void StartupState::exit() {
