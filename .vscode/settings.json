@@ -10,6 +10,16 @@
 	],
 	"files.associations": {
 		"chrono": "cpp",
-		"new": "cpp"
+		"new": "cpp",
+		"optional": "cpp",
+		"istream": "cpp",
+		"ostream": "cpp",
+		"ratio": "cpp",
+		"system_error": "cpp",
+		"array": "cpp",
+		"functional": "cpp",
+		"tuple": "cpp",
+		"type_traits": "cpp",
+		"utility": "cpp"
 	}
 }
