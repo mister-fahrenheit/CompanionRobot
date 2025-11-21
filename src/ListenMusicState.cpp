@@ -19,7 +19,7 @@ void ListenMusicState::enter()
     Brain.Screen.drawRectangle(0, 0, 160, 108);
     Brain.Screen.setPenColor(black);
     Brain.Screen.setFont(mono20);
-    Brain.Screen.printAt(40, 40, songName.c_str());
+    Brain.Screen.printAt(40, 60, songName.c_str());
     Brain.Screen.render();
 
     // Brain.Screen.clearScreen();
@@ -70,7 +70,7 @@ void ListenMusicState::update()
         Brain.Screen.drawRectangle(0, 0, 160, 108);
         Brain.Screen.setPenColor(black);
         Brain.Screen.setFont(mono20);
-        Brain.Screen.printAt(40, 40, songName.c_str());
+        Brain.Screen.printAt(40, 60, songName.c_str());
 
         Brain.Screen.render();
     }
