@@ -18,4 +18,6 @@ extern optical Optical; // Optical sensor
 extern distance Distance; // Distance sensor
 extern controller Controller; // VEX Controller
 
+extern inertial BrainInertial; // Brain Inertial Sensor
+
 #endif // HARDWARE_CONFIG_H
