@@ -1,27 +1,57 @@
 #include "Animation.h"
 #include "hardware-config.h"
+#include <cstdio>
 
-Animation::Animation(const std::string& baseName, int frameCount) : currentFrame(0), frameCount(frameCount * 2) {
-    // The constructor creates the filenames for the animation.
-    for (int i = 1; i <= frameCount; ++i) {
-        filenames.push_back(baseName + std::to_string(i) + "_1.bmp");
-        filenames.push_back(baseName + std::to_string(i) + "_2.bmp");
-    }
+Animation::Animation(const std::string& baseName, int frameCount, int framesPerSecond, int width, int height, int horizontalFrames, int verticalFrames) : 
+                     baseName(baseName), framesPerSecond(framesPerSecond), width(width), height(height), 
+                     horizontalFrames(horizontalFrames), verticalFrames(verticalFrames),
+                     currentFrame(0), frameCount(frameCount) {
     animationTimer.reset();
 }
 
 void Animation::update() {
     // Update the animation frame based on the timer.
-    if (animationTimer.time(msec) > 1000 / 12) { // 12 fps
-        currentFrame +=2;
-        if (currentFrame >= frameCount) {
-            currentFrame = 0;
-        }
-        animationTimer.reset();
+    if (animationTimer.time(msec) > 1000 / framesPerSecond) {
+        forceUpdate();
     }
 }
 
+void Animation::forceUpdate() {
+    Brain.Screen.render();
+    currentFrame += horizontalFrames * verticalFrames; 
+    int totalFrames = frameCount * horizontalFrames * verticalFrames;
+    if (currentFrame >= totalFrames) {
+        currentFrame = 0;
+    }
+    draw();
+    animationTimer.reset();
+}
+
 void Animation::draw() {
-    Brain.Screen.drawImageFromFile(filenames[currentFrame].c_str(), 30, 4);
-    Brain.Screen.drawImageFromFile(filenames[currentFrame+1].c_str(), 30, 54);
+    static int Corner_x = (160 - width)/2 - 1;
+    static int Corner_y = (108 - height)/2 - 1;
+    
+    char filename[128];
+    int counter = 0;
+    
+    // Calculate which logical frame we're on (1-indexed)
+    int logicalFrame = (currentFrame / (horizontalFrames * verticalFrames)) + 1;
+    
+    for (int i = 0; i < verticalFrames; i++) {
+        for (int j = 0; j < horizontalFrames; j++) {
+            // Generate filename on the fly
+            int subFrame = counter + 1;  // 1-indexed
+            snprintf(filename, sizeof(filename), "%s%d_%d.bmp", baseName.c_str(), logicalFrame, subFrame);
+            
+            Brain.Screen.drawImageFromFile(filename, 
+                                          Corner_x + j * width / horizontalFrames, 
+                                          Corner_y + i * height / verticalFrames);
+            counter++;
+        }
+    }
+}
+
+bool Animation::isFinished() {
+    int totalFrames = frameCount * horizontalFrames * verticalFrames;
+    return currentFrame + horizontalFrames * verticalFrames >= totalFrames;
 }
