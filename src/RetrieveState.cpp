@@ -277,7 +277,6 @@ void RetrieveState::update()
     if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
     {
         robot.getMenu().show();
-        return;
     }
 }
 

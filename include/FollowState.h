@@ -15,6 +15,10 @@ public:
 
 private:
     RobotPet& robot;
+    bool lastOptical = false;
+    bool lastDistance = false;
+    int leftMotorSpeed = 0;
+    int rightMotorSpeed = 0;
 };
 
 #endif // FOLLOW_STATE_H
