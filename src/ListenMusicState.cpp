@@ -14,7 +14,12 @@ void ListenMusicState::enter()
     currentSongPtr = badRomance;
     currentSongLength = SONG4_LEN;
     currentNoteIndex = 0;
-    Brain.Screen.print(songName.c_str());
+    Brain.Screen.clearScreen();
+    Brain.Screen.setFillColor(white);
+    Brain.Screen.drawRectangle(0, 0, 160, 108);
+    Brain.Screen.setPenColor(black);
+    Brain.Screen.setFont(mono20);
+    Brain.Screen.printAt(40, 40, songName.c_str());
     Brain.Screen.render();
 
     // Brain.Screen.clearScreen();
@@ -36,16 +41,19 @@ void ListenMusicState::switchSong()
     case 1:
         currentSongPtr = baby;
         currentSongLength = SONG6_LEN;
+        songName = "Baby";
         break;
     case 2:
         currentSongPtr = IloveU;
         currentSongLength = ILOVEU_LEN;
+        songName = "I love U";
         break;
     case 3:
         currentSongPtr = uifu;
         currentSongLength = UIFU_LEN;
+        songName = "Until I found U";
         break;
-        }
+    }
     printf("switched Song");
     currentNoteIndex = 0;
 }
@@ -58,7 +66,12 @@ void ListenMusicState::update()
     {
         switchSong();
         Brain.Screen.clearScreen();
-        Brain.Screen.print(songName.c_str());
+        Brain.Screen.setFillColor(white);
+        Brain.Screen.drawRectangle(0, 0, 160, 108);
+        Brain.Screen.setPenColor(black);
+        Brain.Screen.setFont(mono20);
+        Brain.Screen.printAt(40, 40, songName.c_str());
+
         Brain.Screen.render();
     }
     lastState = bumperPressed;
