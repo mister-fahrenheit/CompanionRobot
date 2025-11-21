@@ -56,5 +56,7 @@ void ManualState::update() {
 
 void ManualState::exit() {
     // This is where any cleanup for the manual state will go.
+    ArmMotor.setStopping(coast);
+    GripperMotor.setStopping(coast);
     Brain.Screen.clearScreen();
 }
