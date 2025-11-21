@@ -10,12 +10,13 @@ void PlayMusicState::enter()
 {
     // This is where the Music control behavior will go.
     // For now, it just prints a message to console.
-    printf("Entered Music State\n");
-    
+    Brain.Screen.setFillColor(white);
+    Brain.Screen.drawRectangle(0, 0, 160, 108);
+    printf("Entered Play Music State\n");
+    Brain.Screen.render();
 }
 void PlayMusicState::setNote(int &note)
 {
-    
     note = static_cast<int>(Distance.objectDistance(mm) / 50);
     if(note>6){
         note =6;
@@ -40,9 +41,6 @@ void PlayMusicState::setNote(int &note)
     }
     lastLED=currentLED;
     lastBumper= currentBumper;    
-    
-
-
 }
 
 void PlayMusicState::update()
@@ -51,8 +49,14 @@ void PlayMusicState::update()
     // If the screen is pressed, show the menu.
     int note = 0;
     setNote(note);
-    printf("note:%d ", note);
-    printf(" octave: %d \n", octave);
+    Brain.Screen.clearScreen();
+    Brain.Screen.setFillColor(white);
+    Brain.Screen.drawRectangle(0, 0, 160, 108);
+    Brain.Screen.setPenColor(black);
+    Brain.Screen.setFont(mono20);
+    Brain.Screen.printAt(40, 40, "Note: %d", note);
+    Brain.Screen.printAt(40, 75, "Octave: %d", octave);
+    Brain.Screen.render();
     Brain.playNote(octave, note, 400);
     if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
     {

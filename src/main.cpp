@@ -39,6 +39,7 @@ int main() {
         // Add menu items.
         robot.getMenu().addMenuItem("Default State", &createDefaultState);
         robot.getMenu().addMenuItem("Follow State", &createFollowState);
+        robot.getMenu().addMenuItem("Retrieve State", &createRetrieveState);
         robot.getMenu().addMenuItem("Play Music State", &createPlayMusicState);
         robot.getMenu().addMenuItem("Manual State", &createManualState);
 
