@@ -18,29 +18,34 @@ void PlayMusicState::enter()
 void PlayMusicState::setNote(int &note)
 {
     note = static_cast<int>(Distance.objectDistance(mm) / 50);
-    if(note>6){
-        note =6;
+    if (note > 6)
+    {
+        note = 6;
     }
-    else if (note<0){
-        note=0;
+    else if (note < 0)
+    {
+        note = 0;
     }
     bool currentBumper = Bumper.pressing();
     if (currentBumper && !lastBumper)
     {
         octave++;
     }
-    bool currentLED=TouchLED.pressing();
-    if(currentLED && !lastLED){
+    bool currentLED = TouchLED.pressing();
+    if (currentLED && !lastLED)
+    {
         octave--;
     }
-    if(octave<1){
-        octave=1;
+    if (octave < 1)
+    {
+        octave = 1;
     }
-    else if(octave>7){
-        octave=7;
+    else if (octave > 7)
+    {
+        octave = 7;
     }
-    lastLED=currentLED;
-    lastBumper= currentBumper;    
+    lastLED = currentLED;
+    lastBumper = currentBumper;
 }
 
 void PlayMusicState::update()
