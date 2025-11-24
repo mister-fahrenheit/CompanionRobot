@@ -142,8 +142,8 @@ void RetrieveState::findAndGrip(color target)
     LeftMotor.spin(forward, 5, percent);
     RightMotor.spin(reverse, 5, percent);
 
-    while (!Optical.isNearObject() && !Optical.color() == target)
-    {
+    //!(Optical.isNearObject()) && 
+    while (!(Optical.color() == target)) {
         wait(20, msec);
     }
 
@@ -158,7 +158,6 @@ void RetrieveState::findAndGrip(color target)
     RightMotor.stop();
     wait(500, msec);
 
-    driveDist(APPROACH_DIST_MM, 20);
     GripperMotor.spin(reverse, 60, percent);
     wait(1000, msec);
     GripperMotor.stop();
@@ -166,7 +165,6 @@ void RetrieveState::findAndGrip(color target)
     wait(1000, msec);
     ArmMotor.stop();
 
-    driveDist(-APPROACH_DIST_MM, 30);
 }
 
 void RetrieveState::selectColorSequence()

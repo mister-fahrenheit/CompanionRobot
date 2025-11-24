@@ -15,71 +15,56 @@ void FollowState::enter() {
     Brain.Screen.setFont(mono20);
     Brain.Screen.printAt(10, 30, "FOLLOW MODE");
     Brain.Screen.render();
-    Optical.objectDetectThreshold(20);
+    Optical.objectDetectThreshold(40);
     Optical.setLight(ledState::on);
     while (!(Optical.isNearObject())) {}
     lastOptical = true;
-    lastDistance = false;
+    lastDistance = true;
     leftMotorSpeed = 0;
     rightMotorSpeed = 0;
 }
 
 void FollowState::update() {
-    // This is the main loop for the follow state.
+    int extend = 0;
     if (Optical.isNearObject()) {
-        leftMotorSpeed -= 20;
-        rightMotorSpeed -= 20;
-        if (leftMotorSpeed < 0)
-            leftMotorSpeed = 0;
-        if (rightMotorSpeed < 0)
-            rightMotorSpeed = 0;
+        leftMotorSpeed = fmax(0, leftMotorSpeed - 20);
+        rightMotorSpeed = fmax(0, rightMotorSpeed - 20);
         lastOptical = true;
     } else {
-        if (lastOptical)
-        {
-            if (leftMotorSpeed == rightMotorSpeed) {
-                leftMotorSpeed += 5;
-                rightMotorSpeed += 5;
-            } else {
-                leftMotorSpeed = 40;
-                rightMotorSpeed = 40;
-            }
-            if (leftMotorSpeed > 100)
-                leftMotorSpeed = 100;
-            if (rightMotorSpeed > 100)
-                rightMotorSpeed = 100;
+        if (Distance.objectDistance(mm) < 500 && lastDistance) {
+            leftMotorSpeed = fmin(100, leftMotorSpeed + 5);
+            rightMotorSpeed = fmin(100, rightMotorSpeed + 5);
+            extend = 1500;
             Brain.Screen.clearLine(3);
             Brain.Screen.printAt(10, 60, "Following");
-        } else if (Distance.objectDistance(mm) < 300 || lastDistance) {
+        } else if (Distance.objectDistance(mm) < 500 || lastDistance) {
             leftMotorSpeed = 45;
             rightMotorSpeed = 35;
-            if (leftMotorSpeed > 100)
-                leftMotorSpeed = 100;
-            if (rightMotorSpeed < 0)
-                rightMotorSpeed = 0;
             Brain.Screen.clearLine(3);
             Brain.Screen.printAt(10, 60, "Turning Right");
+            extend = 2000;
         } else {
             leftMotorSpeed = 35;
             rightMotorSpeed = 45;
-            if (leftMotorSpeed < 0)
-                leftMotorSpeed = 0;
-            if (rightMotorSpeed > 100)
-                rightMotorSpeed = 100;
             Brain.Screen.clearLine(3);
             Brain.Screen.printAt(10, 60, "Turning Left");
         }
         lastOptical = false;
     }
+    
     Brain.Screen.render();
     lastDistance = (Distance.objectDistance(mm) < 300);
     LeftMotor.spin(forward, leftMotorSpeed, percent);
     RightMotor.spin(forward, rightMotorSpeed, percent);
-    wait(1000, msec);
+    
+    if (extend)
+        wait(1500, msec);
+    wait(200, msec);
 
-    // If the screen is pressed, show the menu. (Keep at bottom)
     if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing()) {
         robot.getMenu().show();
+        LeftMotor.stop();
+        RightMotor.stop();
     }
 }
 
