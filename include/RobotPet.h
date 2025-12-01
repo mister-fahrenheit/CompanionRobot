@@ -5,7 +5,12 @@
 #include "Menu.h"
 
 // Represents the robot pet.
-class RobotPet {
+class RobotPet
+{
+private:
+    StateManager stateManager;
+    Menu menu;
+
 public:
     RobotPet();
 
@@ -17,10 +22,6 @@ public:
 
     // Gets the menu.
     Menu& getMenu();
-
-private:
-    StateManager stateManager;
-    Menu menu;
 };
 
 #endif // ROBOT_PET_H

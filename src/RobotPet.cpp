@@ -1,24 +1,24 @@
 #include "RobotPet.h"
 #include "hardware-config.h"
 
-RobotPet::RobotPet() : menu(*this) {
-    // The RobotPet owns the StateManager and Menu, so they are initialized here.
+RobotPet::RobotPet() : menu(*this)
+{
 }
 
-void RobotPet::update() {
-    // If the menu is visible, update it.
-    if (menu.isVisible()) {
+void RobotPet::update()
+{
+    if (menu.isVisible())
         menu.update();
-    } else {
-        // Otherwise, update the state manager.
+    else
         stateManager.update();
-    }
 }
 
-StateManager& RobotPet::getStateManager() {
+StateManager& RobotPet::getStateManager()
+{
     return stateManager;
 }
 
-Menu& RobotPet::getMenu() {
+Menu& RobotPet::getMenu()
+{
     return menu;
 }
