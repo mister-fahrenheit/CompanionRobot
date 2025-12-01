@@ -42,7 +42,7 @@ public:
     void update();
 
     // Returns true if the menu is visible.
-    bool isVisible() const;
+    bool isVisible();
 }; 
 
 #endif // MENU_H
