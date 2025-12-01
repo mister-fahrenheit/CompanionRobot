@@ -4,7 +4,14 @@
 
 RetrieveState::RetrieveState(RobotPet &robot) : robot(robot)
 {
-    // The constructor initializes the reference to the robot.
+    currentStep = INIT;
+    stepStartTime = 0;
+    motorsRunning = false;
+    colorIndex = 0;
+    avoidanceStep = AVOID_NONE;
+    gripStep = GRIP_SEARCHING;
+    effectiveDistanceCovered = 0;
+    currentDegrees = 0;
 }
 
 float RetrieveState::mmToDegrees(float mm)
@@ -12,36 +19,44 @@ float RetrieveState::mmToDegrees(float mm)
     return (mm / WHEEL_CIRCUMFERENCE) * 360.0;
 }
 
-void RetrieveState::driveDist(float distanceMM, int speed)
+void RetrieveState::startDriveDist(float distanceMM, int speed)
 {
     LeftMotor.setPosition(0, degrees);
     RightMotor.setPosition(0, degrees);
 
-    float targetDeg = mmToDegrees(distanceMM);
+    targetDegrees = mmToDegrees(abs(distanceMM));
 
     directionType dir = forward;
     if (distanceMM < 0)
     {
         dir = reverse;
-        targetDeg = -targetDeg;
     }
 
     LeftMotor.spin(dir, speed, percent);
     RightMotor.spin(dir, speed, percent);
-
-    while ((abs(LeftMotor.position(degrees)) + abs(RightMotor.position(degrees))) / 2 < targetDeg)
-    {
-        wait(10, msec);
-    }
-
-    LeftMotor.stop();
-    RightMotor.stop();
+    motorsRunning = true;
 }
 
-void RetrieveState::turnDeg(float degreesToTurn)
+bool RetrieveState::isDriveDistComplete()
 {
-    float startAngle = BrainInertial.rotation(degrees);
-    float targetAngle = startAngle + degreesToTurn;
+    if (!motorsRunning) return true;
+    
+    float avgPosition = (abs(LeftMotor.position(degrees)) + abs(RightMotor.position(degrees))) / 2;
+    
+    if (avgPosition >= targetDegrees)
+    {
+        LeftMotor.stop();
+        RightMotor.stop();
+        motorsRunning = false;
+        return true;
+    }
+    return false;
+}
+
+void RetrieveState::startTurnDeg(float degreesToTurn)
+{
+    startAngle = BrainInertial.rotation(degrees);
+    targetAngle = startAngle + degreesToTurn;
 
     int turnSpeed = 15;
 
@@ -49,47 +64,42 @@ void RetrieveState::turnDeg(float degreesToTurn)
     {
         LeftMotor.spin(forward, turnSpeed, percent);
         RightMotor.spin(reverse, turnSpeed, percent);
-
-        while (BrainInertial.rotation(degrees) < targetAngle)
-        {
-            wait(10, msec);
-        }
     }
     else
     {
         LeftMotor.spin(reverse, turnSpeed, percent);
         RightMotor.spin(forward, turnSpeed, percent);
-
-        while (BrainInertial.rotation(degrees) > targetAngle)
-        {
-            wait(10, msec);
-        }
     }
-
-    LeftMotor.stop();
-    RightMotor.stop();
+    motorsRunning = true;
 }
 
-void RetrieveState::performAvoidance()
+bool RetrieveState::isTurnComplete()
 {
-    LeftMotor.stop();
-    RightMotor.stop();
-    wait(500, msec);
-
-    driveDist(-AVOID_BACKUP_MM, 40);
-
-    turnDeg(90);
-    driveDist(300, 40);
-    turnDeg(-90);
-
-    driveDist(AVOID_FORWARD_MM, 40);
-
-    turnDeg(-90);
-    driveDist(300, 40);
-    turnDeg(90);
+    if (!motorsRunning) return true;
+    
+    float currentRotation = BrainInertial.rotation(degrees);
+    bool complete = false;
+    
+    if (targetAngle > startAngle)
+    {
+        complete = (currentRotation >= targetAngle);
+    }
+    else
+    {
+        complete = (currentRotation <= targetAngle);
+    }
+    
+    if (complete)
+    {
+        LeftMotor.stop();
+        RightMotor.stop();
+        motorsRunning = false;
+        return true;
+    }
+    return false;
 }
 
-void RetrieveState::driveWithAvoidance(int distanceMM)
+void RetrieveState::startDriveWithAvoidance(int distanceMM)
 {
     Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
@@ -101,122 +111,236 @@ void RetrieveState::driveWithAvoidance(int distanceMM)
     LeftMotor.setPosition(0, degrees);
     RightMotor.setPosition(0, degrees);
 
-    float targetDegrees = mmToDegrees(distanceMM);
-    float currentDegrees = 0;
-    float effectiveDistanceCovered = 0;
+    targetDegrees = mmToDegrees(distanceMM);
+    effectiveDistanceCovered = 0;
 
     LeftMotor.spin(forward, 50, percent);
     RightMotor.spin(forward, 50, percent);
-
-    while (effectiveDistanceCovered < targetDegrees)
-    {
-        currentDegrees = (LeftMotor.position(degrees) + RightMotor.position(degrees)) / 2;
-        effectiveDistanceCovered = currentDegrees;
-
-        if (Optical.isNearObject() && Optical.brightness() > 10)
-        {
-            performAvoidance();
-
-            LeftMotor.setPosition(0, degrees);
-            RightMotor.setPosition(0, degrees);
-
-            targetDegrees -= (currentDegrees - mmToDegrees(AVOID_BACKUP_MM) + mmToDegrees(AVOID_FORWARD_MM));
-
-            effectiveDistanceCovered = 0;
-
-            LeftMotor.spin(forward, 50, percent);
-            RightMotor.spin(forward, 50, percent);
-        }
-        wait(20, msec);
-    }
-
-    LeftMotor.stop();
-    RightMotor.stop();
+    motorsRunning = true;
+    avoidanceStep = AVOID_NONE;
 }
 
-void RetrieveState::findAndGrip(color target)
+bool RetrieveState::updateDriveWithAvoidance()
+{
+    // Handle avoidance sequence if active
+    if (avoidanceStep != AVOID_NONE)
+    {
+        switch (avoidanceStep)
+        {
+            case AVOID_BACKUP:
+                if (isDriveDistComplete())
+                {
+                    avoidanceStep = AVOID_TURN1;
+                    startTurnDeg(90);
+                }
+                break;
+            
+            case AVOID_TURN1:
+                if (isTurnComplete())
+                {
+                    avoidanceStep = AVOID_DRIVE1;
+                    startDriveDist(300, 40);
+                }
+                break;
+            
+            case AVOID_DRIVE1:
+                if (isDriveDistComplete())
+                {
+                    avoidanceStep = AVOID_TURN2;
+                    startTurnDeg(-90);
+                }
+                break;
+            
+            case AVOID_TURN2:
+                if (isTurnComplete())
+                {
+                    avoidanceStep = AVOID_DRIVE2;
+                    startDriveDist(AVOID_FORWARD_MM, 40);
+                }
+                break;
+            
+            case AVOID_DRIVE2:
+                if (isDriveDistComplete())
+                {
+                    avoidanceStep = AVOID_TURN3;
+                    startTurnDeg(-90);
+                }
+                break;
+            
+            case AVOID_TURN3:
+                if (isTurnComplete())
+                {
+                    avoidanceStep = AVOID_DRIVE3;
+                    startDriveDist(300, 40);
+                }
+                break;
+            
+            case AVOID_DRIVE3:
+                if (isDriveDistComplete())
+                {
+                    avoidanceStep = AVOID_TURN4;
+                    startTurnDeg(90);
+                }
+                break;
+            
+            case AVOID_TURN4:
+                if (isTurnComplete())
+                {
+                    // Avoidance complete, resume driving
+                    LeftMotor.setPosition(0, degrees);
+                    RightMotor.setPosition(0, degrees);
+
+                    targetDegrees -= (currentDegrees - mmToDegrees(AVOID_BACKUP_MM) + mmToDegrees(AVOID_FORWARD_MM));
+                    effectiveDistanceCovered = 0;
+
+                    LeftMotor.spin(forward, 50, percent);
+                    RightMotor.spin(forward, 50, percent);
+                    motorsRunning = true;
+                    avoidanceStep = AVOID_NONE;
+                }
+                break;
+        }
+        return false;
+    }
+
+    // Normal driving with obstacle detection
+    currentDegrees = (LeftMotor.position(degrees) + RightMotor.position(degrees)) / 2;
+    effectiveDistanceCovered = currentDegrees;
+
+    if (Optical.isNearObject() && Optical.brightness() > 10)
+    {
+        // Start avoidance
+        LeftMotor.stop();
+        RightMotor.stop();
+        motorsRunning = false;
+        avoidanceStep = AVOID_BACKUP;
+        stepStartTime = Brain.timer(msec);
+        return false;
+    }
+
+    if (effectiveDistanceCovered >= targetDegrees)
+    {
+        LeftMotor.stop();
+        RightMotor.stop();
+        motorsRunning = false;
+        return true;
+    }
+
+    return false;
+}
+
+void RetrieveState::startFindAndGrip(color target)
 {
     LeftMotor.stop();
     RightMotor.stop();
 
     LeftMotor.spin(forward, 5, percent);
     RightMotor.spin(reverse, 5, percent);
-
-    //!(Optical.isNearObject()) && 
-    while (!(Optical.color() == target)) {
-        wait(20, msec);
-    }
-
-    Brain.Screen.setFillColor(white);
-    Brain.Screen.drawRectangle(0, 0, 160, 108);
-    Brain.Screen.setPenColor(black);
-    Brain.Screen.setFont(mono30);
-    Brain.Screen.printAt(40, 65, "Found");
-    Brain.Screen.render();
-
-    LeftMotor.stop();
-    RightMotor.stop();
-    wait(500, msec);
-
-    GripperMotor.spin(reverse, 60, percent);
-    wait(1000, msec);
-    GripperMotor.stop();
-    ArmMotor.spin(forward, 60, percent);
-    wait(1000, msec);
-    ArmMotor.stop();
-
+    
+    gripStep = GRIP_SEARCHING;
+    motorsRunning = true;
 }
 
-void RetrieveState::selectColorSequence()
+bool RetrieveState::updateFindAndGrip()
 {
-    int colorIndex = 0;
-    TouchLED.on(red);
-
-    Brain.Screen.setFillColor(white);
-    Brain.Screen.drawRectangle(0, 0, 160, 108);
-    Brain.Screen.setPenColor(black);
-    Brain.Screen.setFont(mono15);
-    Brain.Screen.printAt(15, 40, "Select a Color");
-    Brain.Screen.printAt(10, 75, "Then press Bumper");
-    Brain.Screen.render();
-
-    while (!Bumper.pressing())
+    switch (gripStep)
     {
-        if (TouchLED.pressing())
-        {
-            while (TouchLED.pressing())
+        case GRIP_SEARCHING:
+            if (Optical.color() == desiredColor)
             {
-                wait(10, msec);
-            }
+                Brain.Screen.setFillColor(white);
+                Brain.Screen.drawRectangle(0, 0, 160, 108);
+                Brain.Screen.setPenColor(black);
+                Brain.Screen.setFont(mono30);
+                Brain.Screen.printAt(40, 65, "Found");
+                Brain.Screen.render();
 
-            colorIndex++;
-            if (colorIndex > 2)
-                colorIndex = 0;
-            if (colorIndex == 0)
-            {
-                TouchLED.on(red);
-                desiredColor = red;
+                LeftMotor.stop();
+                RightMotor.stop();
+                motorsRunning = false;
+                
+                gripStep = GRIP_FOUND_WAIT;
+                stepStartTime = Brain.timer(msec);
             }
-            else if (colorIndex == 1)
+            break;
+        
+        case GRIP_FOUND_WAIT:
+            if (Brain.timer(msec) - stepStartTime >= 500)
             {
-                TouchLED.on(green);
-                desiredColor = green;
+                GripperMotor.spin(reverse, 60, percent);
+                gripStep = GRIP_CLOSING;
+                stepStartTime = Brain.timer(msec);
             }
-            else if (colorIndex == 2)
+            break;
+        
+        case GRIP_CLOSING:
+            if (Brain.timer(msec) - stepStartTime >= 1000)
             {
-                TouchLED.on(blue);
-                desiredColor = blue;
+                GripperMotor.stop();
+                ArmMotor.spin(forward, 60, percent);
+                gripStep = GRIP_LIFTING;
+                stepStartTime = Brain.timer(msec);
             }
-        }
-        wait(50, msec);
+            break;
+        
+        case GRIP_LIFTING:
+            if (Brain.timer(msec) - stepStartTime >= 1000)
+            {
+                ArmMotor.stop();
+                gripStep = GRIP_COMPLETE;
+                return true;
+            }
+            break;
+        
+        case GRIP_COMPLETE:
+            return true;
     }
-    wait(500, msec);
-    TouchLED.on(desiredColor);
+    
+    return false;
+}
+
+bool RetrieveState::updateColorSelection()
+{
+    if (Bumper.pressing())
+    {
+        TouchLED.on(desiredColor);
+        return true;
+    }
+
+    if (TouchLED.pressing())
+    {
+        // Debounce - wait for release
+        while (TouchLED.pressing())
+        {
+            wait(10, msec);
+        }
+
+        colorIndex++;
+        if (colorIndex > 2)
+            colorIndex = 0;
+            
+        if (colorIndex == 0)
+        {
+            TouchLED.on(red);
+            desiredColor = red;
+        }
+        else if (colorIndex == 1)
+        {
+            TouchLED.on(green);
+            desiredColor = green;
+        }
+        else if (colorIndex == 2)
+        {
+            TouchLED.on(blue);
+            desiredColor = blue;
+        }
+    }
+    
+    return false;
 }
 
 void RetrieveState::enter()
 {
-    // This is where the retrieve behavior will go.
     printf("Entered Retrieve State\n");
     Brain.Screen.clearScreen();
     Brain.Screen.setFillColor(white);
@@ -228,47 +352,131 @@ void RetrieveState::enter()
     Optical.setLight(ledState::on);
 
     GripperMotor.spin(forward, 60, percent);
-    BrainInertial.calibrate();
-    while (BrainInertial.isCalibrating())
-    {
-        wait(100, msec);
-    }
-    GripperMotor.stop();
-    selectColorSequence();
-
-    driveWithAvoidance(TARGET_DISTANCE_MM);
-
-    findAndGrip(desiredColor);
-
-    float currentHeading = BrainInertial.rotation(degrees);
-    float degreesToFaceHome = 180.0 - currentHeading;
-
-    Brain.Screen.setFillColor(white);
-    Brain.Screen.drawRectangle(0, 0, 160, 108);
-    Brain.Screen.setPenColor(black);
-    Brain.Screen.setFont(mono30);
-    Brain.Screen.printAt(20, 65, "Returning");
-    Brain.Screen.render();  
-
-    turnDeg(degreesToFaceHome);
-    wait(500, msec);
-
-    driveDist(TARGET_DISTANCE_MM, 50);
-
-    ArmMotor.setStopping(brake);
-    GripperMotor.setStopping(brake);
-    Brain.Screen.setFillColor(white);
-    Brain.Screen.drawRectangle(0, 0, 160, 108);
-    Brain.Screen.printAt(30, 75, "Press Bumper");
-    Brain.Screen.render();
+    
+    currentStep = INIT;
+    stepStartTime = Brain.timer(msec);
 }
 
 void RetrieveState::update()
 {
-    // This is the main loop for the follow state.
-    if (Bumper.pressing())
+    switch (currentStep)
     {
-        robot.getStateManager().transitionTo(new RetrieveState(robot));
+        case INIT:
+            // Start calibration
+            BrainInertial.calibrate();
+            currentStep = CALIBRATING;
+            break;
+        
+        case CALIBRATING:
+            if (!BrainInertial.isCalibrating())
+            {
+                GripperMotor.stop();
+                
+                // Setup color selection
+                colorIndex = 0;
+                TouchLED.on(red);
+                desiredColor = red;
+
+                Brain.Screen.setFillColor(white);
+                Brain.Screen.drawRectangle(0, 0, 160, 108);
+                Brain.Screen.setPenColor(black);
+                Brain.Screen.setFont(mono15);
+                Brain.Screen.printAt(15, 40, "Select a Color");
+                Brain.Screen.printAt(10, 75, "Then press Bumper");
+                Brain.Screen.render();
+                
+                currentStep = SELECTING_COLOR;
+            }
+            break;
+        
+        case SELECTING_COLOR:
+            if (updateColorSelection())
+            {
+                stepStartTime = Brain.timer(msec);
+                currentStep = DRIVING_TO_TARGET;
+                startDriveWithAvoidance(TARGET_DISTANCE_MM);
+            }
+            break;
+        
+        case DRIVING_TO_TARGET:
+            if (updateDriveWithAvoidance())
+            {
+                currentStep = FINDING_OBJECT;
+                startFindAndGrip(desiredColor);
+            }
+            break;
+        
+        case FINDING_OBJECT:
+            if (updateFindAndGrip())
+            {
+                currentStep = TURNING_HOME;
+                
+                float currentHeading = BrainInertial.rotation(degrees);
+                degreesToFaceHome = 180.0 - currentHeading;
+
+                Brain.Screen.setFillColor(white);
+                Brain.Screen.drawRectangle(0, 0, 160, 108);
+                Brain.Screen.setPenColor(black);
+                Brain.Screen.setFont(mono30);
+                Brain.Screen.printAt(20, 65, "Returning");
+                Brain.Screen.render();
+                
+                startTurnDeg(degreesToFaceHome);
+            }
+            break;
+        
+        case TURNING_HOME:
+            if (isTurnComplete())
+            {
+                stepStartTime = Brain.timer(msec);
+                currentStep = DRIVING_HOME;
+            }
+            break;
+        
+        case DRIVING_HOME:
+            if (Brain.timer(msec) - stepStartTime >= 500)
+            {
+                if (!motorsRunning)
+                {
+                    startDriveDist(TARGET_DISTANCE_MM, 50);
+                }
+                
+                if (isDriveDistComplete())
+                {
+                    currentStep = COMPLETE;
+                    
+                    ArmMotor.setStopping(brake);
+                    GripperMotor.setStopping(brake);
+                    Brain.Screen.setFillColor(white);
+                    Brain.Screen.drawRectangle(0, 0, 160, 108);
+                    Brain.Screen.printAt(30, 75, "Press Bumper");
+                    Brain.Screen.render();
+                }
+            }
+            break;
+        
+        case COMPLETE:
+            if (Bumper.pressing())
+            {
+                // Reset the state to start over
+                currentStep = INIT;
+                stepStartTime = 0;
+                motorsRunning = false;
+                colorIndex = 0;
+                avoidanceStep = AVOID_NONE;
+                gripStep = GRIP_SEARCHING;
+                effectiveDistanceCovered = 0;
+                currentDegrees = 0;
+                
+                Brain.Screen.clearScreen();
+                Brain.Screen.setFillColor(white);
+                Brain.Screen.drawRectangle(0, 0, 160, 108);
+                Brain.Screen.render();
+                
+                GripperMotor.spin(forward, 60, percent);
+                stepStartTime = Brain.timer(msec);
+            }
+            break;
     }
 
     // If the screen is pressed, show the menu. (Keep at bottom)
@@ -280,9 +488,11 @@ void RetrieveState::update()
 
 void RetrieveState::exit()
 {
-    // This is where any cleanup for the follow state will go.
     ArmMotor.setStopping(coast);
     GripperMotor.setStopping(coast);
     Optical.setLight(ledState::off);
     Brain.Screen.clearScreen();
+    
+    LeftMotor.stop();
+    RightMotor.stop();
 }
