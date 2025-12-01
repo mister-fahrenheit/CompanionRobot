@@ -2,10 +2,10 @@
 #include "hardware-config.h"
 
 #include "RobotPet.h"
-ListenMusicState::ListenMusicState(RobotPet &robot)
-    : robot(robot)
+ListenMusicState::ListenMusicState(RobotPet &robot) : robot(robot)
 {
 }
+
 void ListenMusicState::enter()
 {
     printf("Entered Listen Music State\n");
@@ -21,19 +21,15 @@ void ListenMusicState::enter()
     Brain.Screen.setFont(mono15);
     Brain.Screen.printAt(40, 60, songName.c_str());
     Brain.Screen.render();
-
-    // Brain.Screen.clearScreen();
-    // Brain.Screen.print("Song 1: Song4");
 }
 
 void ListenMusicState::switchSong()
 {
-    currentSongIndex = (currentSongIndex + 1) % 4; // cycle 0→1→2→0
+    currentSongIndex = (currentSongIndex + 1) % 4;
 
     switch (currentSongIndex)
     {
     case 0:
-
         currentSongPtr = badRomance;
         currentSongLength = SONG4_LEN;
         songName = "Bad Romance";
@@ -75,30 +71,21 @@ void ListenMusicState::update()
         Brain.Screen.render();
     }
     lastState = bumperPressed;
+
     if (currentNoteIndex >= currentSongLength)
-    {
         currentNoteIndex = 0;
-    }
 
     const Note &n = currentSongPtr[currentNoteIndex];
     printf("song= %d\n", currentSongIndex);
+    
     if (n.octave == 0 && n.note == 0)
-    {
-        // REST: be silent for duration
-        wait(n.duration, msec); // blocking rest
-        currentNoteIndex++;     // move to next note
-    }
+        wait(n.duration, msec);
     else
-    {
-        // NORMAL NOTE
-        Brain.playNote(n.octave, n.note, n.duration); // blocking note
-        currentNoteIndex++;                           // move to next note
-    }
-    if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
-    {
+        Brain.playNote(n.octave, n.note, n.duration);
+    currentNoteIndex++;
 
+    if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
         robot.getMenu().show();
-    }
 }
 
 void ListenMusicState::exit()
