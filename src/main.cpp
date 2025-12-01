@@ -72,10 +72,11 @@ int main()
 
         if (!(TouchLED.pressing()))
             exitTimer.reset();
-
-        ShutdownState *shutdownState = new ShutdownState(robot);
-        robot.getStateManager().transitionTo(shutdownState);
     }
+
+    ShutdownState *shutdownState = new ShutdownState(robot);
+    robot.getStateManager().transitionTo(shutdownState);
+    delete shutdownState;
 
     Brain.programStop();
 }
