@@ -2,12 +2,12 @@
 #include "hardware-config.h"
 #include "RobotPet.h"
 
-FollowState::FollowState(RobotPet& robot) : robot(robot) {
-    // The constructor initializes the reference to the robot.
+FollowState::FollowState(RobotPet& robot) : robot(robot)
+{
 }
 
-void FollowState::enter() {
-    // This is where the follow behavior will go.
+void FollowState::enter()
+{
     printf("Entered Follow State\n");
     Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
@@ -24,26 +24,35 @@ void FollowState::enter() {
     rightMotorSpeed = 0;
 }
 
-void FollowState::update() {
+void FollowState::update()
+{
     int extend = 0;
-    if (Optical.isNearObject()) {
+    if (Optical.isNearObject())
+    {
         leftMotorSpeed = fmax(0, leftMotorSpeed - 20);
         rightMotorSpeed = fmax(0, rightMotorSpeed - 20);
         lastOptical = true;
-    } else {
-        if (Distance.objectDistance(mm) < 500 && lastDistance) {
+    }
+    else
+    {
+        if (Distance.objectDistance(mm) < 500 && lastDistance)
+        {
             leftMotorSpeed = fmin(100, leftMotorSpeed + 5);
             rightMotorSpeed = fmin(100, rightMotorSpeed + 5);
             extend = 1500;
             Brain.Screen.clearLine(3);
             Brain.Screen.printAt(10, 60, "Following");
-        } else if (Distance.objectDistance(mm) < 500 || lastDistance) {
+        }
+        else if (Distance.objectDistance(mm) < 500 || lastDistance)
+        {
             leftMotorSpeed = 45;
             rightMotorSpeed = 35;
             Brain.Screen.clearLine(3);
             Brain.Screen.printAt(10, 60, "Turning Right");
             extend = 2000;
-        } else {
+        }
+        else
+        {
             leftMotorSpeed = 35;
             rightMotorSpeed = 45;
             Brain.Screen.clearLine(3);
@@ -57,18 +66,19 @@ void FollowState::update() {
     LeftMotor.spin(forward, leftMotorSpeed, percent);
     RightMotor.spin(forward, rightMotorSpeed, percent);
     
-    if (extend)
-        wait(1500, msec);
+    wait(extend, msec);
     wait(200, msec);
 
-    if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing()) {
+    if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
+    {
         robot.getMenu().show();
         LeftMotor.stop();
         RightMotor.stop();
     }
 }
 
-void FollowState::exit() {
+void FollowState::exit()
+{
     // This is where any cleanup for the follow state will go.
     Brain.Screen.clearScreen();
     Optical.setLight(ledState::off);
