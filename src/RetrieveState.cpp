@@ -28,9 +28,7 @@ void RetrieveState::startDriveDist(float distanceMM, int speed)
 
     directionType dir = forward;
     if (distanceMM < 0)
-    {
         dir = reverse;
-    }
 
     LeftMotor.spin(dir, speed, percent);
     RightMotor.spin(dir, speed, percent);
@@ -39,7 +37,8 @@ void RetrieveState::startDriveDist(float distanceMM, int speed)
 
 bool RetrieveState::isDriveDistComplete()
 {
-    if (!motorsRunning) return true;
+    if (!motorsRunning)
+        return true;
     
     float avgPosition = (abs(LeftMotor.position(degrees)) + abs(RightMotor.position(degrees))) / 2;
     
@@ -75,19 +74,16 @@ void RetrieveState::startTurnDeg(float degreesToTurn)
 
 bool RetrieveState::isTurnComplete()
 {
-    if (!motorsRunning) return true;
+    if (!motorsRunning)
+        return true;
     
     float currentRotation = BrainInertial.rotation(degrees);
     bool complete = false;
     
     if (targetAngle > startAngle)
-    {
         complete = (currentRotation >= targetAngle);
-    }
     else
-    {
         complete = (currentRotation <= targetAngle);
-    }
     
     if (complete)
     {
@@ -437,9 +433,7 @@ void RetrieveState::update()
             if (Brain.timer(msec) - stepStartTime >= 500)
             {
                 if (!motorsRunning)
-                {
                     startDriveDist(TARGET_DISTANCE_MM, 50);
-                }
                 
                 if (isDriveDistComplete())
                 {
@@ -481,9 +475,7 @@ void RetrieveState::update()
 
     // If the screen is pressed, show the menu. (Keep at bottom)
     if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
-    {
         robot.getMenu().show();
-    }
 }
 
 void RetrieveState::exit()
