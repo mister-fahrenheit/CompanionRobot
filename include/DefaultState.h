@@ -6,20 +6,21 @@
 #include "Animation.h"
 
 // The default state for the robot.
-class DefaultState : public RobotState {
+class DefaultState : public RobotState
+{
+private:
+    RobotPet& robot;
+    Animation* currentAnimation;
+
+    void selectAnimation();
+    void changeAnimationTo(Animation* newAnimation);
+
 public:
     DefaultState(RobotPet& robot);
 
     void enter() override;
     void update() override;
     void exit() override;
-
-    void selectAnimation();
-    void changeAnimationTo(Animation* newAnimation);
-
-private:
-    RobotPet& robot;
-    Animation* currentAnimation;
 };
 
 #endif // DEFAULT_STATE_H

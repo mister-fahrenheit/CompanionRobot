@@ -2,37 +2,46 @@
 #include "hardware-config.h"
 #include "RobotPet.h"
 
-DefaultState::DefaultState(RobotPet& robot) : robot(robot), currentAnimation(NULL) {
-    // The constructor initializes the reference to the robot.
+DefaultState::DefaultState(RobotPet& robot) : robot(robot), currentAnimation(NULL)
+{
 }
 
-void DefaultState::selectAnimation() {
+void DefaultState::selectAnimation()
+{
     int randomNumber = rand() % 101;
-    if (randomNumber > 75) {
-        changeAnimationTo(new Animation("NORMAL", 14, 6));
+    if (randomNumber > 75)
+    {
+        changeAnimationTo(new Animation("HAPPY", 14, 6));
         printf("Animation Changed to HAPPY\n");
-    } else if (randomNumber > 50) {
-        changeAnimationTo(new Animation("NORMAL", 14, 6));
+    }
+    else if (randomNumber > 50)
+    {
+        changeAnimationTo(new Animation("SAD", 14, 6));
         printf("Animation Changed to SAD\n");
-    } else if (randomNumber > 25) {
-        changeAnimationTo(new Animation("NORMAL", 14, 6));
+    }
+    else if (randomNumber > 25)
+    {
+        changeAnimationTo(new Animation("ANGRY", 14, 6));
         printf("Animation Changed to ANGRY\n");
-    } else {
+    }
+    else
+    {
         changeAnimationTo(new Animation("NORMAL", 14, 6));
         printf("Animation Changed to NORMAL\n");
     }
 }
 
-void DefaultState::changeAnimationTo(Animation* newAnimation) {
-    if (currentAnimation != NULL) {
-        delete currentAnimation;
-    }
+void DefaultState::changeAnimationTo(Animation* newAnimation)
+{
+    delete currentAnimation;
+    
     currentAnimation = newAnimation;
     currentAnimation->draw();
     Brain.Screen.render();
 }
 
-void DefaultState::enter() {
+void DefaultState::enter()
+{
     Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
     printf("Entered Default State\n");
@@ -41,21 +50,21 @@ void DefaultState::enter() {
     Brain.Screen.render();
 }
 
-void DefaultState::update() {
+void DefaultState::update()
+{
     // This is the main loop for the default state.
-    if (!currentAnimation->isFinished()) {
+    if (!currentAnimation->isFinished())
         currentAnimation->update();
-    } else {
+    else
         selectAnimation();
-    }
 
     // If the screen is pressed, show the menu. (Keep at bottom)
-    if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing()) {
+    if (Brain.buttonCheck.pressing() || Controller.ButtonFUp.pressing())
         robot.getMenu().show();
-    }
 }
 
-void DefaultState::exit() {
+void DefaultState::exit()
+{
     // This is where any cleanup for the default state will go.
     delete currentAnimation;
     Brain.Screen.clearScreen();
