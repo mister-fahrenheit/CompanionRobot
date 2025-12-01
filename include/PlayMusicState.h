@@ -7,7 +7,14 @@
 // The state for when the robot is playing music.
 class PlayMusicState : public RobotState
 {
+private:
+    RobotPet &robot;
+    vex::timer musicTimer;
+    bool lastBumper = false;
+    bool lastLED= false;
+    int octave = 1;
 
+    void setNote(int &);
 
 public:
     PlayMusicState(RobotPet &robot);
@@ -15,14 +22,6 @@ public:
     void enter() override;
     void update() override;
     void exit() override;
-    void setNote(int &);
-
-private:
-    RobotPet &robot;
-    vex::timer musicTimer;
-    bool lastBumper = false;
-    bool lastLED= false;
-    int octave = 1;
 };
 
 #endif // PLAY_MUSIC_STATE_H

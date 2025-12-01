@@ -2,12 +2,12 @@
 #include "StartupState.h"
 #include "DefaultState.h"
 
-StartupState::StartupState(RobotPet& robot) : robot(robot), startupAnimation(NULL) {
-    // The constructor initializes the reference to the robot.
+StartupState::StartupState(RobotPet& robot) : robot(robot), startupAnimation(NULL)
+{
 }
 
-void StartupState::enter() {
-    // This is where the startup behavior will go.
+void StartupState::enter()
+{
     Brain.Screen.render();
     Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
@@ -17,16 +17,17 @@ void StartupState::enter() {
     TouchLED.setColor(red);
 }
 
-void StartupState::update() {
-    // After a short delay, transition to the default state.
-    if (!startupAnimation->isFinished()) {
+void StartupState::update()
+{
+    // After the animation, transition to the default state.
+    if (!startupAnimation->isFinished())
         startupAnimation->update();
-    } else {
+    else
         robot.getStateManager().transitionTo(new DefaultState(robot));
-    }
 }
 
-void StartupState::exit() {
+void StartupState::exit()
+{
     // This is where any cleanup for the startup state will go.
     delete startupAnimation;
     TouchLED.setColor(green);

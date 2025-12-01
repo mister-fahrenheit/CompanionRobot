@@ -5,17 +5,27 @@
 #include "RobotState.h"
 #include "StateManager.h"
 #include "Animation.h"
-#include <vector>
 #include <string>
 
-class RobotPet; // Forward declaration
+class RobotPet;
 
-struct MenuItem {
+struct MenuItem
+{
     std::string name;
     RobotState* (*createState)(RobotPet&);
 };
 
-class Menu {
+class Menu
+{
+private:
+    void draw();
+
+    RobotPet& robot;
+    bool visible;
+    int selectedIndex;
+    MenuItem menuItems[6];
+    int menuItemCount;
+
 public:
     Menu(RobotPet& robot);
 
@@ -32,15 +42,7 @@ public:
     void update();
 
     // Returns true if the menu is visible.
-    bool isVisible() const;
-
-private:
-    void draw();
-
-    RobotPet& robot;
-    bool visible;
-    int selectedIndex;
-    std::vector<MenuItem> menuItems;
+    bool isVisible();
 }; 
 
 #endif // MENU_H

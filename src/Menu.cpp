@@ -2,51 +2,59 @@
 #include "RobotPet.h"
 #include "hardware-config.h"
 
-Menu::Menu(RobotPet& robot) : robot(robot), visible(false), selectedIndex(0) {
-    // The constructor initializes the menu.
+Menu::Menu(RobotPet& robot) : robot(robot), visible(false), selectedIndex(0), menuItemCount(0)
+{
 }
 
-void Menu::addMenuItem(const std::string& name, RobotState* (*createState)(RobotPet&)) {
-    // Adds a menu item to the list.
-    menuItems.push_back({name, createState});
+void Menu::addMenuItem(const std::string& name, RobotState* (*createState)(RobotPet&))
+{
+    menuItems[menuItemCount].name = name;
+    menuItems[menuItemCount].createState = createState;
+    menuItemCount++;
 }
 
-void Menu::show() {
-    // Shows the menu.
+void Menu::show()
+{
     visible = true;
     draw();
     wait(200, msec);
     printf("Menu Opened\n");
 }
 
-void Menu::hide() {
-    // Hides the menu.
+void Menu::hide()
+{
     visible = false;
     printf("Menu Closed\n");
 }
 
-void Menu::update() {
-    // If the menu is not visible, do nothing.
-    if (!visible) {
+void Menu::update()
+{
+    if (!visible)
         return;
-    }
+
     // Handle button presses.
-    if (Brain.buttonLeft.pressing() || Controller.ButtonEUp.pressing()) {
+    if (Brain.buttonLeft.pressing() || Controller.ButtonEUp.pressing())
+    {
         selectedIndex--;
-        if (selectedIndex < 0) {
-            selectedIndex = menuItems.size() - 1;
-        }
+        if (selectedIndex < 0)
+            selectedIndex = menuItemCount - 1;
+        
         printf("Menu moved to %d\n", selectedIndex);
         draw();
-    } else if (Brain.buttonRight.pressing() || Controller.ButtonEDown.pressing()){
+    }
+    else if (Brain.buttonRight.pressing() || Controller.ButtonEDown.pressing())
+    {
         selectedIndex++;
-        if (selectedIndex >= menuItems.size()) {
+        if (selectedIndex >= menuItemCount)
             selectedIndex = 0;
-        }
+        
         printf("Menu moved to %d\n", selectedIndex);
         draw();
-    }else if (Brain.buttonCheck.pressing()  || Controller.ButtonFUp.pressing()) {
-        if (menuItems.size() > 0) {
+    }
+    else if (Brain.buttonCheck.pressing()  || Controller.ButtonFUp.pressing())
+    {
+        if (menuItemCount > 0)
+        {
             Brain.Screen.clearScreen();
             robot.getStateManager().transitionTo(menuItems[selectedIndex].createState(robot));
             hide();
@@ -55,11 +63,13 @@ void Menu::update() {
     wait(100, msec); // Debounce
 }
 
-bool Menu::isVisible() const {
+bool Menu::isVisible()
+{
     return visible;
 }
 
-void Menu::draw() {
+void Menu::draw()
+{
     Brain.Screen.setFillColor(white);
     Brain.Screen.drawRectangle(0, 0, 160, 108);
     Brain.Screen.setPenColor(black);

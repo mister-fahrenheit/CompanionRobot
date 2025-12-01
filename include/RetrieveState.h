@@ -4,23 +4,14 @@
 #include "RobotState.h"
 #include "RobotPet.h"
 
-using namespace vex;
-
 // The state for when the robot is retrieving items.
 class RetrieveState : public RobotState
 {
-public:
-    RetrieveState(RobotPet &robot);
-
-    void enter() override;
-    void update() override;
-    void exit() override;
-
 private:
     RobotPet &robot;
 
-    // State machine for retrieve sequence
-    enum RetrieveStep {
+    enum RetrieveStep
+    {
         INIT,
         CALIBRATING,
         SELECTING_COLOR,
@@ -31,43 +22,10 @@ private:
         DRIVING_HOME,
         COMPLETE
     };
-
     RetrieveStep currentStep;
-    int stepStartTime;
     
-    // Tracking variables for non-blocking operations
-    float targetDegrees;
-    float startAngle;
-    float targetAngle;
-    bool motorsRunning;
-    int colorIndex;
-    float effectiveDistanceCovered;
-    float currentDegrees;
-    float degreesToFaceHome;
-
-    // Helper functions
-    float mmToDegrees(float mm);
-    void startDriveDist(float distanceMM, int speed);
-    bool isDriveDistComplete();
-    void startTurnDeg(float degreesToTurn);
-    bool isTurnComplete();
-    void performAvoidanceStep();
-    void startDriveWithAvoidance(int distanceMM);
-    bool updateDriveWithAvoidance();
-    void startFindAndGrip(color target);
-    bool updateFindAndGrip();
-    bool updateColorSelection();
-
-    const float WHEEL_DIAMETER = 63.5; // mm
-    const float WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * 3.14159;
-    const int TARGET_DISTANCE_MM = 2000; // 2 meters
-    const int APPROACH_DIST_MM = 80;
-    const int AVOID_BACKUP_MM = 80;
-    const int AVOID_FORWARD_MM = 750;
-    color desiredColor = red;
-    
-    // Avoidance state tracking
-    enum AvoidanceStep {
+    enum AvoidanceStep
+    {
         AVOID_NONE,
         AVOID_BACKUP,
         AVOID_TURN1,
@@ -81,8 +39,8 @@ private:
     };
     AvoidanceStep avoidanceStep;
     
-    // Grip sequence tracking
-    enum GripStep {
+    enum GripStep
+    {
         GRIP_SEARCHING,
         GRIP_FOUND_WAIT,
         GRIP_CLOSING,
@@ -90,6 +48,44 @@ private:
         GRIP_COMPLETE
     };
     GripStep gripStep;
+
+    int stepStartTime;
+    float targetDegrees;
+    float startAngle;
+    float targetAngle;
+    bool motorsRunning;
+    int colorIndex;
+    float effectiveDistanceCovered;
+    float currentDegrees;
+    float degreesToFaceHome;
+
+    const float WHEEL_DIAMETER = 63.5; // mm
+    const float WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * 3.14159;
+    const int TARGET_DISTANCE_MM = 2000; // 2 meters
+    const int APPROACH_DIST_MM = 80;
+    const int AVOID_BACKUP_MM = 80;
+    const int AVOID_FORWARD_MM = 750;
+    vex::color desiredColor = vex::color::red;
+
+    // Helper functions
+    float mmToDegrees(float mm);
+    void startDriveDist(float distanceMM, int speed);
+    bool isDriveDistComplete();
+    void startTurnDeg(float degreesToTurn);
+    bool isTurnComplete();
+    void performAvoidanceStep();
+    void startDriveWithAvoidance(int distanceMM);
+    bool updateDriveWithAvoidance();
+    void startFindAndGrip(vex::color target);
+    bool updateFindAndGrip();
+    bool updateColorSelection();
+    
+public:
+    RetrieveState(RobotPet &robot);
+
+    void enter() override;
+    void update() override;
+    void exit() override;
 };
 
 #endif // RETRIEVE_STATE_H

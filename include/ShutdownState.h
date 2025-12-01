@@ -5,16 +5,17 @@
 #include "RobotPet.h"
 
 // The state for when the robot is shutting down.
-class ShutdownState : public RobotState {
+class ShutdownState : public RobotState
+{
+private:
+    RobotPet& robot;
+
 public:
     ShutdownState(RobotPet& robot);
 
     void enter() override;
     void update() override;
     void exit() override;
-
-private:
-    RobotPet& robot;
 };
 
 #endif // SHUTDOWN_STATE_H

@@ -4,7 +4,11 @@
 #include "RobotState.h"
 
 // Manages the current state and handles transitions.
-class StateManager {
+class StateManager
+{
+private:
+    RobotState* currentState;
+
 public:
     StateManager();
 
@@ -13,9 +17,6 @@ public:
 
     // Updates the current state.
     void update();
-
-private:
-    RobotState* currentState;
 };
 
 #endif // STATE_MANAGER_H
