@@ -4,9 +4,6 @@
 // Interface for a robot state.
 class RobotState {
 public:
-    // Virtual destructor to ensure proper cleanup of derived classes.
-    virtual ~RobotState() {}
-
     // Called when the state is entered.
     virtual void enter() = 0;
 
