@@ -27,30 +27,31 @@ void ListenMusicState::switchSong()
 {
     currentSongIndex = (currentSongIndex + 1) % 4;
 
-    switch (currentSongIndex)
+    if (currentSongIndex == 0)
     {
-    case 0:
         currentSongPtr = badRomance;
         currentSongLength = SONG4_LEN;
         songName = "Bad Romance";
-        break;
-    case 1:
+    }
+    else if (currentSongIndex == 1)
+    {
         currentSongPtr = baby;
         currentSongLength = SONG6_LEN;
         songName = "Baby";
-        break;
-    case 2:
+    }
+    else if (currentSongIndex == 2)
+    {
         currentSongPtr = IloveU;
         currentSongLength = ILOVEU_LEN;
         songName = "I love U";
-        break;
-    case 3:
+    }
+    else if (currentSongIndex == 3)
+    {
         currentSongPtr = uifu;
         currentSongLength = UIFU_LEN;
         songName = "Until I found U";
-        break;
     }
-    printf("switched Song");
+    printf("Switched Song \n");
     currentNoteIndex = 0;
 }
 

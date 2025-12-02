@@ -121,80 +121,78 @@ bool RetrieveState::updateDriveWithAvoidance()
     // Handle avoidance sequence if active
     if (avoidanceStep != AVOID_NONE)
     {
-        switch (avoidanceStep)
+        if (avoidanceStep == AVOID_BACKUP)
         {
-            case AVOID_BACKUP:
-                if (isDriveDistComplete())
-                {
-                    avoidanceStep = AVOID_TURN1;
-                    startTurnDeg(90);
-                }
-                break;
-            
-            case AVOID_TURN1:
-                if (isTurnComplete())
-                {
-                    avoidanceStep = AVOID_DRIVE1;
-                    startDriveDist(300, 40);
-                }
-                break;
-            
-            case AVOID_DRIVE1:
-                if (isDriveDistComplete())
-                {
-                    avoidanceStep = AVOID_TURN2;
-                    startTurnDeg(-90);
-                }
-                break;
-            
-            case AVOID_TURN2:
-                if (isTurnComplete())
-                {
-                    avoidanceStep = AVOID_DRIVE2;
-                    startDriveDist(AVOID_FORWARD_MM, 40);
-                }
-                break;
-            
-            case AVOID_DRIVE2:
-                if (isDriveDistComplete())
-                {
-                    avoidanceStep = AVOID_TURN3;
-                    startTurnDeg(-90);
-                }
-                break;
-            
-            case AVOID_TURN3:
-                if (isTurnComplete())
-                {
-                    avoidanceStep = AVOID_DRIVE3;
-                    startDriveDist(300, 40);
-                }
-                break;
-            
-            case AVOID_DRIVE3:
-                if (isDriveDistComplete())
-                {
-                    avoidanceStep = AVOID_TURN4;
-                    startTurnDeg(90);
-                }
-                break;
-            
-            case AVOID_TURN4:
-                if (isTurnComplete())
-                {
-                    // Avoidance complete, resume driving
-                    LeftMotor.setPosition(0, degrees);
-                    RightMotor.setPosition(0, degrees);
+            if (isDriveDistComplete())
+            {
+                avoidanceStep = AVOID_TURN1;
+                startTurnDeg(90);
+            }
+        }
+        else if (avoidanceStep == AVOID_TURN1)
+        {
+            if (isTurnComplete())
+            {
+                avoidanceStep = AVOID_DRIVE1;
+                startDriveDist(300, 40);
+            }
+        }
+        else if (avoidanceStep == AVOID_DRIVE1)
+        {
+            if (isDriveDistComplete())
+            {
+                avoidanceStep = AVOID_TURN2;
+                startTurnDeg(-90);
+            }
+        }
+        else if (avoidanceStep == AVOID_TURN2)
+        {
+            if (isTurnComplete())
+            {
+                avoidanceStep = AVOID_DRIVE2;
+                startDriveDist(AVOID_FORWARD_MM, 40);
+            }
+        }
+        else if (avoidanceStep == AVOID_DRIVE2)
+        {
+            if (isDriveDistComplete())
+            {
+                avoidanceStep = AVOID_TURN3;
+                startTurnDeg(-90);
+            }
+        }
+        else if (avoidanceStep == AVOID_TURN3)
+        {
+            if (isTurnComplete())
+            {
+                avoidanceStep = AVOID_DRIVE3;
+                startDriveDist(300, 40);
+            }
+        }
+        else if (avoidanceStep == AVOID_DRIVE3)
+        {
+            if (isDriveDistComplete())
+            {
+                avoidanceStep = AVOID_TURN4;
+                startTurnDeg(90);
+            }
+        }
+        else if (avoidanceStep == AVOID_TURN4)
+        {
+            if (isTurnComplete())
+            {
+                // Avoidance complete, resume driving
+                LeftMotor.setPosition(0, degrees);
+                RightMotor.setPosition(0, degrees);
 
-                    targetDegrees -= (currentDegrees - mmToDegrees(AVOID_BACKUP_MM) + mmToDegrees(AVOID_FORWARD_MM));
-                    effectiveDistanceCovered = 0;
+                targetDegrees -= (currentDegrees - mmToDegrees(AVOID_BACKUP_MM) + mmToDegrees(AVOID_FORWARD_MM));
+                effectiveDistanceCovered = 0;
 
-                    LeftMotor.spin(forward, 50, percent);
-                    RightMotor.spin(forward, 50, percent);
-                    motorsRunning = true;
-                    avoidanceStep = AVOID_NONE;
-                }
-                break;
+                LeftMotor.spin(forward, 50, percent);
+                RightMotor.spin(forward, 50, percent);
+                motorsRunning = true;
+                avoidanceStep = AVOID_NONE;
+            }
         }
         return false;
     }
@@ -239,57 +237,56 @@ void RetrieveState::startFindAndGrip(color target)
 
 bool RetrieveState::updateFindAndGrip()
 {
-    switch (gripStep)
+    if (gripStep == GRIP_SEARCHING)
     {
-        case GRIP_SEARCHING:
-            if (Optical.color() == desiredColor)
-            {
-                Brain.Screen.setFillColor(white);
-                Brain.Screen.drawRectangle(0, 0, 160, 108);
-                Brain.Screen.setPenColor(black);
-                Brain.Screen.setFont(mono30);
-                Brain.Screen.printAt(40, 65, "Found");
-                Brain.Screen.render();
+        if (Optical.color() == desiredColor)
+        {
+            Brain.Screen.setFillColor(white);
+            Brain.Screen.drawRectangle(0, 0, 160, 108);
+            Brain.Screen.setPenColor(black);
+            Brain.Screen.setFont(mono30);
+            Brain.Screen.printAt(40, 65, "Found");
+            Brain.Screen.render();
 
-                LeftMotor.stop();
-                RightMotor.stop();
-                motorsRunning = false;
-                
-                gripStep = GRIP_FOUND_WAIT;
-                stepStartTime = Brain.timer(msec);
-            }
-            break;
-        
-        case GRIP_FOUND_WAIT:
-            if (Brain.timer(msec) - stepStartTime >= 500)
-            {
-                GripperMotor.spin(reverse, 60, percent);
-                gripStep = GRIP_CLOSING;
-                stepStartTime = Brain.timer(msec);
-            }
-            break;
-        
-        case GRIP_CLOSING:
-            if (Brain.timer(msec) - stepStartTime >= 1000)
-            {
-                GripperMotor.stop();
-                ArmMotor.spin(forward, 60, percent);
-                gripStep = GRIP_LIFTING;
-                stepStartTime = Brain.timer(msec);
-            }
-            break;
-        
-        case GRIP_LIFTING:
-            if (Brain.timer(msec) - stepStartTime >= 1000)
-            {
-                ArmMotor.stop();
-                gripStep = GRIP_COMPLETE;
-                return true;
-            }
-            break;
-        
-        case GRIP_COMPLETE:
+            LeftMotor.stop();
+            RightMotor.stop();
+            motorsRunning = false;
+            
+            gripStep = GRIP_FOUND_WAIT;
+            stepStartTime = Brain.timer(msec);
+        }
+    }
+    else if (gripStep == GRIP_FOUND_WAIT)
+    {
+        if (Brain.timer(msec) - stepStartTime >= 500)
+        {
+            GripperMotor.spin(reverse, 60, percent);
+            gripStep = GRIP_CLOSING;
+            stepStartTime = Brain.timer(msec);
+        }
+    }
+    else if (gripStep == GRIP_CLOSING)
+    {
+        if (Brain.timer(msec) - stepStartTime >= 1000)
+        {
+            GripperMotor.stop();
+            ArmMotor.spin(forward, 60, percent);
+            gripStep = GRIP_LIFTING;
+            stepStartTime = Brain.timer(msec);
+        }
+    }
+    else if (gripStep == GRIP_LIFTING)
+    {
+        if (Brain.timer(msec) - stepStartTime >= 1000)
+        {
+            ArmMotor.stop();
+            gripStep = GRIP_COMPLETE;
             return true;
+        }
+    }
+    else if (gripStep == GRIP_COMPLETE)
+    {
+        return true;
     }
     
     return false;
@@ -355,122 +352,120 @@ void RetrieveState::enter()
 
 void RetrieveState::update()
 {
-    switch (currentStep)
+    if (currentStep == INIT)
     {
-        case INIT:
-            // Start calibration
-            BrainInertial.calibrate();
-            currentStep = CALIBRATING;
-            break;
-        
-        case CALIBRATING:
-            if (!BrainInertial.isCalibrating())
-            {
-                GripperMotor.stop();
-                
-                // Setup color selection
-                colorIndex = 0;
-                TouchLED.on(red);
-                desiredColor = red;
+        // Start calibration
+        BrainInertial.calibrate();
+        currentStep = CALIBRATING;
+    }
+    else if (currentStep == CALIBRATING)
+    {
+        if (!BrainInertial.isCalibrating())
+        {
+            GripperMotor.stop();
+            
+            // Setup color selection
+            colorIndex = 0;
+            TouchLED.on(red);
+            desiredColor = red;
 
-                Brain.Screen.setFillColor(white);
-                Brain.Screen.drawRectangle(0, 0, 160, 108);
-                Brain.Screen.setPenColor(black);
-                Brain.Screen.setFont(mono15);
-                Brain.Screen.printAt(15, 40, "Select a Color");
-                Brain.Screen.printAt(10, 75, "Then press Bumper");
-                Brain.Screen.render();
-                
-                currentStep = SELECTING_COLOR;
-            }
-            break;
-        
-        case SELECTING_COLOR:
-            if (updateColorSelection())
-            {
-                stepStartTime = Brain.timer(msec);
-                currentStep = DRIVING_TO_TARGET;
-                startDriveWithAvoidance(TARGET_DISTANCE_MM);
-            }
-            break;
-        
-        case DRIVING_TO_TARGET:
-            if (updateDriveWithAvoidance())
-            {
-                currentStep = FINDING_OBJECT;
-                startFindAndGrip(desiredColor);
-            }
-            break;
-        
-        case FINDING_OBJECT:
-            if (updateFindAndGrip())
-            {
-                currentStep = TURNING_HOME;
-                
-                float currentHeading = BrainInertial.rotation(degrees);
-                degreesToFaceHome = 180.0 - currentHeading;
+            Brain.Screen.setFillColor(white);
+            Brain.Screen.drawRectangle(0, 0, 160, 108);
+            Brain.Screen.setPenColor(black);
+            Brain.Screen.setFont(mono15);
+            Brain.Screen.printAt(15, 40, "Select a Color");
+            Brain.Screen.printAt(10, 75, "Then press Bumper");
+            Brain.Screen.render();
+            
+            currentStep = SELECTING_COLOR;
+        }
+    }
+    else if (currentStep == SELECTING_COLOR)
+    {
+        if (updateColorSelection())
+        {
+            stepStartTime = Brain.timer(msec);
+            currentStep = DRIVING_TO_TARGET;
+            startDriveWithAvoidance(TARGET_DISTANCE_MM);
+        }
+    }
+    else if (currentStep == DRIVING_TO_TARGET)
+    {
+        if (updateDriveWithAvoidance())
+        {
+            currentStep = FINDING_OBJECT;
+            startFindAndGrip(desiredColor);
+        }
+    }
+    else if (currentStep == FINDING_OBJECT)
+    {
+        if (updateFindAndGrip())
+        {
+            currentStep = TURNING_HOME;
+            
+            float currentHeading = BrainInertial.rotation(degrees);
+            degreesToFaceHome = 180.0 - currentHeading;
 
-                Brain.Screen.setFillColor(white);
-                Brain.Screen.drawRectangle(0, 0, 160, 108);
-                Brain.Screen.setPenColor(black);
-                Brain.Screen.setFont(mono30);
-                Brain.Screen.printAt(20, 65, "Returning");
-                Brain.Screen.render();
-                
-                startTurnDeg(degreesToFaceHome);
-            }
-            break;
-        
-        case TURNING_HOME:
+            Brain.Screen.setFillColor(white);
+            Brain.Screen.drawRectangle(0, 0, 160, 108);
+            Brain.Screen.setPenColor(black);
+            Brain.Screen.setFont(mono30);
+            Brain.Screen.printAt(20, 65, "Returning");
+            Brain.Screen.render();
+            
+            startTurnDeg(degreesToFaceHome);
+        }
+    }
+    else if (currentStep == TURNING_HOME)
+    {
             if (isTurnComplete())
             {
                 stepStartTime = Brain.timer(msec);
                 currentStep = DRIVING_HOME;
             }
-            break;
-        
-        case DRIVING_HOME:
-            if (Brain.timer(msec) - stepStartTime >= 500)
+    }
+    else if (currentStep == DRIVING_HOME)
+    {
+        if (Brain.timer(msec) - stepStartTime >= 500)
+        {
+            if (!motorsRunning)
+                startDriveDist(TARGET_DISTANCE_MM, 50);
+            
+            if (isDriveDistComplete())
             {
-                if (!motorsRunning)
-                    startDriveDist(TARGET_DISTANCE_MM, 50);
+                currentStep = COMPLETE;
                 
-                if (isDriveDistComplete())
-                {
-                    currentStep = COMPLETE;
-                    
-                    ArmMotor.setStopping(brake);
-                    GripperMotor.setStopping(brake);
-                    Brain.Screen.setFillColor(white);
-                    Brain.Screen.drawRectangle(0, 0, 160, 108);
-                    Brain.Screen.printAt(30, 75, "Press Bumper");
-                    Brain.Screen.render();
-                }
-            }
-            break;
-        
-        case COMPLETE:
-            if (Bumper.pressing())
-            {
-                // Reset the state to start over
-                currentStep = INIT;
-                stepStartTime = 0;
-                motorsRunning = false;
-                colorIndex = 0;
-                avoidanceStep = AVOID_NONE;
-                gripStep = GRIP_SEARCHING;
-                effectiveDistanceCovered = 0;
-                currentDegrees = 0;
-                
-                Brain.Screen.clearScreen();
+                ArmMotor.setStopping(brake);
+                GripperMotor.setStopping(brake);
                 Brain.Screen.setFillColor(white);
                 Brain.Screen.drawRectangle(0, 0, 160, 108);
+                Brain.Screen.printAt(30, 75, "Press Bumper");
                 Brain.Screen.render();
-                
-                GripperMotor.spin(forward, 60, percent);
-                stepStartTime = Brain.timer(msec);
             }
-            break;
+        }
+    }
+    else if (currentStep == COMPLETE)
+    {
+        if (Bumper.pressing())
+        {
+            // Reset the state to start over
+            currentStep = INIT;
+            stepStartTime = 0;
+            motorsRunning = false;
+            colorIndex = 0;
+            avoidanceStep = AVOID_NONE;
+            gripStep = GRIP_SEARCHING;
+            effectiveDistanceCovered = 0;
+            currentDegrees = 0;
+            
+            Brain.Screen.clearScreen();
+            Brain.Screen.setFillColor(white);
+            Brain.Screen.drawRectangle(0, 0, 160, 108);
+            Brain.Screen.render();
+            
+            GripperMotor.spin(forward, 60, percent);
+            stepStartTime = Brain.timer(msec);
+        }
     }
 
     // If the screen is pressed, show the menu. (Keep at bottom)

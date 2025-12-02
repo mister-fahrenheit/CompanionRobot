@@ -17,7 +17,6 @@ private:
         SELECTING_COLOR,
         DRIVING_TO_TARGET,
         FINDING_OBJECT,
-        GRIPPING_OBJECT,
         TURNING_HOME,
         DRIVING_HOME,
         COMPLETE
@@ -34,8 +33,7 @@ private:
         AVOID_DRIVE2,
         AVOID_TURN3,
         AVOID_DRIVE3,
-        AVOID_TURN4,
-        AVOID_COMPLETE
+        AVOID_TURN4,  
     };
     AvoidanceStep avoidanceStep;
     
