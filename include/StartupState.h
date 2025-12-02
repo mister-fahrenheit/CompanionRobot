@@ -11,6 +11,8 @@ class StartupState : public RobotState
 private:
     RobotPet& robot;
     Animation* startupAnimation;
+    bool hardwareChecked = false;
+    bool hardwareOk = true; 
 
 public:
     StartupState(RobotPet& robot);

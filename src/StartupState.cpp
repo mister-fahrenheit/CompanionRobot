@@ -19,6 +19,57 @@ void StartupState::enter()
 
 void StartupState::update()
 {
+    if (!hardwareChecked)
+    {
+        printf("Performing hardware checks...\n");
+
+        // Motors
+        bool ok = LeftMotor.installed();
+        printf("LeftMotor: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = RightMotor.installed();
+        printf("RightMotor: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = ArmMotor.installed();
+        printf("ArmMotor: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = GripperMotor.installed();
+        printf("GripperMotor: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        // Sensors
+        ok = Bumper.installed();
+        printf("Bumper: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = TouchLED.installed();
+        printf("TouchLED: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = Optical.installed();
+        printf("Optical: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = Distance.installed();
+        printf("Distance: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        ok = BrainInertial.installed();
+        printf("Inertial: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        // SD card
+        ok = Brain.SDcard.isInserted();
+        printf("SD Card: %s\n", ok ? "PASS" : "FAIL");
+        if (!ok) hardwareOk = false;
+
+        hardwareChecked = true;
+        printf("Hardware check complete.\n");
+    }
+
     // After the animation, transition to the default state.
     if (!startupAnimation->isFinished())
         startupAnimation->update();
@@ -28,8 +79,12 @@ void StartupState::update()
 
 void StartupState::exit()
 {
-    // This is where any cleanup for the startup state will go.
     delete startupAnimation;
-    TouchLED.setColor(green);
+
+    if (hardwareOk)
+        TouchLED.setColor(green);
+    else
+        TouchLED.setColor(red);
+
     Brain.Screen.clearScreen();
 }
