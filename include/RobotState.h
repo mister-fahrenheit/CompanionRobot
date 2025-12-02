@@ -2,7 +2,8 @@
 #define ROBOT_STATE_H
 
 // Interface for a robot state.
-class RobotState {
+class RobotState
+{
 public:
     // Called when the state is entered.
     virtual void enter() = 0;
